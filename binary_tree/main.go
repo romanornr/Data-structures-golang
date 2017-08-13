@@ -54,6 +54,59 @@ func (n *Node) Find(s string) (float64, bool) {
 	}
 }
 
+func (n *Node) findMax(parent *Node) (*Node, *Node) {
+	if n.Right == nil {
+		return n, parent
+	}
+	return n.Right.findMax(n)
+}
+
+func (n *Node) replaceNode(parent, replacement *Node) error {
+	if n == nil {
+		return errors.New("ReplaceNode() not allowed on nil node")
+	}
+	if n == parent.Left {
+		parent.Left = replacement
+		return nil
+	}
+	parent.Right = replacement
+	return nil
+}
+
+func (n *Node) Delete(s string, parent *Node) error {
+	if n == nil {
+		return errors.New("Value does not exist in the binary tree")
+	}
+
+	switch {
+	case s < n.Value.Name:
+		return n.Left.Delete(s, n)
+	case s > n.Value.Name:
+		return n.Right.Delete(s, n)
+	default:
+		if n.Left == nil && n.Right == nil {
+			n.replaceNode(parent, nil)
+			return nil
+		}
+
+		if n.Left == nil {
+			n.replaceNode(parent, n.Right)
+			return nil
+		}
+
+		if n.Right == nil {
+			n.replaceNode(parent, n.Left)
+			return nil
+		}
+
+		replacement, replaceParent := n.Left.findMax(n)
+
+		n.Value = replacement.Value
+		n.Value.Price = replacement.Value.Price
+		return replacement.Delete(replacement.Value.Name, replaceParent)
+	}
+}
+
 func main() {
 
 	var head *Node
@@ -66,9 +119,11 @@ func main() {
 
 	fmt.Println(head.Right.Value.Price)
 	fmt.Println(head.Right.Left.Value.Price)
+
+	head.Delete("Decred", head)
+
 	d := string("Decred")
-	var a float64
-	a, found := head.Find(d)
-	fmt.Println(a)
+	_, found := head.Find(d)
 	fmt.Println(found)
+
 }
